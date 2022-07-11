@@ -14,7 +14,7 @@ const Timezones = () => {
   const { user } = useContext(UserContext);
   const [modalShow, setModalShow] = useState(false);
   const [editTimezoneData, setEditTimezoneData] = useState(null);
-  
+  const [searchResult, setSearchResult] = useState(null);
   const location = useLocation();
   const { emailId } = location.state;
 
@@ -27,6 +27,7 @@ const Timezones = () => {
           lastName: response.user.lastName,
           timeZone: response.user.timeZone,
         });
+        setSearchResult(response.user.timeZone)
       });
   }, []);
 
@@ -53,6 +54,7 @@ const Timezones = () => {
           timeZone: responeData.timeZone,
         };
       });
+      setSearchResult(responeData.timeZone)
     } else {
       toast.error(responeData.message);
     }
@@ -82,6 +84,7 @@ const Timezones = () => {
           timeZone: responeData.timeZone,
         };
       });
+      setSearchResult(responeData.timeZone)
     } else {
       toast.error(responeData.message);
     }
@@ -107,6 +110,7 @@ const Timezones = () => {
           timeZone: responeData.timeZone,
         };
       });
+      setSearchResult(responeData.timeZone)
     } else {
       toast.error(responeData.message);
     }
@@ -121,6 +125,19 @@ const Timezones = () => {
   const onEditTimezone = (timeZone) => {
     setEditTimezoneData(timeZone);
   };
+
+  const onHandleSearch=(e)=>{
+    const { name, value } = e.target;
+    const filteredData = userData.timeZone.filter((el) => {
+      if (value === '') {
+          return el;
+      }
+      else {
+          return el.timeZone.toLowerCase().includes(value.toLowerCase())
+      }
+    })
+    setSearchResult(filteredData);
+  }
 
   const resetData = () => {
     setEditTimezoneData(null);
@@ -150,9 +167,17 @@ const Timezones = () => {
           onEditTimezone={handleEditTimezone}
         />
       </div>
+      <Form.Group className="mb-3" controlId="formBasicEmail">
+            <Form.Control
+              type="text"
+              placeholder="Search"
+              name="search"
+              onChange={onHandleSearch}
+            />
+          </Form.Group>
       <div className="timezone-grid-container">
         {userData === null && <div className="spinner-container"><Spinner animation="border" variant="primary" /></div>}
-        {userData && userData?.timeZone?.length > 0 ? (
+        {searchResult && searchResult?.length > 0 ? (
           <TimeZoneGrid
             timeZones={userData.timeZone}
             onDeleteTimezone={onDeleteTimezone}
