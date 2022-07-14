@@ -170,6 +170,14 @@ const Timezones = () => {
           />
         </div>
       </div>
+      <Form.Group className="mb-3" controlId="formBasicEmail">
+            <Form.Control
+              type="text"
+              placeholder="Search"
+              name="search"
+              onChange={onHandleSearch}
+            />
+          </Form.Group>
       <div className="timezone-grid-container">
         {userData === null && (
           <div className="spinner-container">
