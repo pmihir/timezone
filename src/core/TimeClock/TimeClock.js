@@ -12,9 +12,9 @@ const TimeClock = ({ timeZone }) => {
         ticking={true}
         timezone={timeZone}
       />
-      <div>
+   <div>
         <span>{output}</span>
-      </div>
+        </div>
     </>
   );
 };

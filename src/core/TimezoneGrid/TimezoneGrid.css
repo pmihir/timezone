@@ -2,3 +2,6 @@
     display: flex;
     justify-content: space-evenly;
 }
+.timeclock {
+    margin-bottom: 15px;
+}

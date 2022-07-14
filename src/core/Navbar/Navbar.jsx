@@ -10,8 +10,7 @@ const AppNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { setUser } = useContext(UserContext);
-  const isHideLogout = logoutPaths.includes(location.pathname);
-  console.log("Show", isHideLogout);
+  const isShowLogout = !logoutPaths.includes(location.pathname);
 
   const handleLogout = () => {
     setUser(null);
@@ -22,7 +21,7 @@ const AppNav = () => {
     <Navbar bg="primary" variant="dark">
       <Container>
         <Navbar.Brand href="#home">Timezone</Navbar.Brand>
-        {!isHideLogout && (
+        {isShowLogout && (
           <Navbar.Collapse className="justify-content-end">
             <Navbar.Text onClick={handleLogout}>
               <span style={{ color: "white" }}>Logout</span>

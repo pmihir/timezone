@@ -6,20 +6,24 @@ import UserContext from "../../Context/userContext";
 import { toast } from "react-toastify";
 import Spinner from 'react-bootstrap/Spinner';
 import './Users.css'
+import { ADMIN_USER_ROLE, BASE_URL, REQUEST_TYPE_DELETE, REQUEST_TYPE_GET } from "../../constants/common";
+import { apiClient } from "../../network/apiClient";
+
 const Users = () => {
   const [users, setUsers] = useState(null);
   const { user } = useContext(UserContext);
 
   const getUsers = async () => {
-    const response = await fetch("http://localhost:5000/user/getAllUsers", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${user.jwt}`,
-      },
-    });
-    const responeData = await response.json();
-    setUsers(responeData.userData);
+    try {
+      const response = await apiClient({
+        url: `getAllUsers`,
+        method: REQUEST_TYPE_GET,
+        authToken: user.jwt,
+      });
+      setUsers(response.userData);
+    } catch (e) {
+      console.log(e.message);
+    }
   };
 
   useEffect(() => {
@@ -27,21 +31,17 @@ const Users = () => {
   }, []);
 
   const deleteUser = async (emailId) => {
-    const response = await fetch("http://localhost:5000/user/deleteUser", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${user.jwt}`,
-      },
-      body: JSON.stringify({
-        emailId: emailId,
-      }),
-    });
-    const responeData = await response.json();
-    if (response.status === 200) {
-      setUsers(responeData.userData);
-    } else {
-      toast.error(responeData.message);
+    try {
+      const response = await apiClient({
+        url: `deleteUser`,
+        method: REQUEST_TYPE_DELETE,
+        authToken: user.jwt,
+        body: { emailId: emailId}
+      });
+      setUsers(response.userData);
+      toast.success("User Deleted succesfully");
+    } catch (e) {
+      toast.error(e.message);
     }
   };
 
@@ -76,7 +76,7 @@ const Users = () => {
                     state={{ emailId: userData.emailId }}
                     style={{ textDecoration: "none", color: "white" }}
                   >
-                    {user.role === 2 && (
+                    {user.role === ADMIN_USER_ROLE && (
                       <Button variant="primary" size="sm">
                         View Timzones
                       </Button>

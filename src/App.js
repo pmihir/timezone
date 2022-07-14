@@ -4,12 +4,13 @@ import { Login } from "./components/Login/Login";
 import { Routes, Route } from "react-router-dom";
 import { Timezones } from "./components/Timezone/Timezone";
 import SignUp from "./components/Signup/Signup";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { createContext, useState } from "react";
+import { useState } from "react";
 import UserContext from "./Context/userContext";
 import Users from "./components/Users/Users";
 import AppNav from "./core/Navbar/Navbar";
+import Protected from "./Protected";
 
 function App() {
   const [user, setUser] = useState({});
@@ -32,9 +33,23 @@ function App() {
         <AppNav />
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="timezone" element={<Timezones />} />
+          <Route
+            path="timezone"
+            element={
+              <Protected user={user}>
+                <Timezones />
+              </Protected>
+            }
+          />
           <Route path="signUp" element={<SignUp />} />
-          <Route path="users" element={<Users />} />
+          <Route
+            path="users"
+            element={
+              <Protected user={user}>
+                <Users />
+              </Protected>
+            }
+          />
         </Routes>
       </div>
     </UserContext.Provider>

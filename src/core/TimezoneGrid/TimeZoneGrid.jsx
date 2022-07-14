@@ -12,9 +12,9 @@ const TimeZoneGrid = ({ timeZones, onDeleteTimezone, onEditTimezone }) => {
             <Card.Header>{timeZone.name}</Card.Header>
             <Card.Body>
               <Card.Title>{timeZone.timeZone}</Card.Title>
-              <Card.Text>
+              <div className="timeclock">
                 <TimeClock timeZone={timeZone.timeZone} />
-              </Card.Text>
+              </div>
               <div className="card-btn">
                 <Button variant="primary" onClick={() => onEditTimezone(timeZone)}>Edit</Button>
                 <Button

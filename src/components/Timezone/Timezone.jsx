@@ -1,64 +1,76 @@
-import { useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { useLocation } from "react-router-dom";
+import Form from "react-bootstrap/Form";
 import TimeZoneGrid from "../../core/TimezoneGrid/TimeZoneGrid";
 import "./Timezone.css";
 import UserContext from "../../Context/userContext";
 import { Button } from "react-bootstrap";
 import TimeZoneModal from "../../core/AddTimeoneModal/TimeZoneModal";
-import Spinner from 'react-bootstrap/Spinner';
+import Spinner from "react-bootstrap/Spinner";
+import { REQUEST_TYPE_GET, REQUEST_TYPE_POST } from "../../constants/common";
+import { apiClient } from "../../network/apiClient";
 
 const Timezones = () => {
-  const [userData, setUserData] = useState(null);
   const { user } = useContext(UserContext);
+  const location = useLocation();
+
+  const [userData, setUserData] = useState(null);
   const [modalShow, setModalShow] = useState(false);
   const [editTimezoneData, setEditTimezoneData] = useState(null);
-  
-  const location = useLocation();
+  const [searchResult, setSearchResult] = useState(null);
   const { emailId } = location.state;
 
-  useEffect(() => {
-    fetch(`http://localhost:5000/user/getTimeZone/?emailId=${emailId}`)
-      .then((data) => data.json())
-      .then((response) => {
-        setUserData({
-          firstName: response.user.firstName,
-          lastName: response.user.lastName,
-          timeZone: response.user.timeZone,
-        });
+  const setUserTimezoneData = (timezoneData) => {
+    setUserData({
+      firstName: timezoneData.firstName,
+      lastName: timezoneData.lastName,
+      timeZone: timezoneData.timeZone,
+    });
+    setSearchResult(timezoneData.timeZone);
+  };
+
+  const getTimezoneData = async () => {
+    try {
+      const response = await apiClient({
+        url: `getTimeZone/?emailId=${emailId}`,
+        method: REQUEST_TYPE_GET,
       });
+      setUserTimezoneData(response.user);
+    } catch (e) {
+      console.log(e.message);
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line
+    getTimezoneData();
   }, []);
 
-  const handleEditTimezone = async ({ _id, name, timeZone }) => {
+  const handleEditTimezone = useCallback(async ({ _id, name, timeZone }) => {
     const data = {
       emailId: emailId,
       _id,
       name,
       timeZone,
     };
-    const response = await fetch("http://localhost:5000/user/editTimezone", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    const responeData = await response.json();
-    if (response.status === 200) {
-      setModalShow(false);
-      setUserData((userdata) => {
-        return {
-          ...userdata,
-          timeZone: responeData.timeZone,
-        };
+    try {
+      const response = await apiClient({
+        url: `editTimezone`,
+        method: REQUEST_TYPE_POST,
+        authToken: user.jwt,
+        body: data,
       });
-    } else {
-      toast.error(responeData.message);
+      setModalShow(false);
+      setUserTimezoneData(response);
+      toast.success("Timzone Edited");
+    } catch (e) {
+      toast.error(e.message);
     }
-  };
+  }, []);
 
-  const handleAddTimeZone = async ({ name, timeZone }) => {
+  const handleAddTimeZone = useCallback(async ({ name, timeZone }) => {
     const data = {
       emailId: emailId,
       timeZone: {
@@ -66,51 +78,34 @@ const Timezones = () => {
         timeZone,
       },
     };
-    const response = await fetch("http://localhost:5000/user/addTimeZone", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    const responeData = await response.json();
-    if (response.status === 200) {
+    try {
+      const response = await apiClient({
+        url: `addTimeZone`,
+        method: REQUEST_TYPE_POST,
+        body: data,
+      });
       setModalShow(false);
-      setUserData((userdata) => {
-        return {
-          ...userdata,
-          timeZone: responeData.timeZone,
-        };
-      });
-    } else {
-      toast.error(responeData.message);
+      setUserTimezoneData(response);
+      toast.success("Timzone Added");
+    } catch (e) {
+      toast.error(e.message);
     }
-  };
+  }, []);
 
-  const onDeleteTimezone = async (timezone) => {
-    const response = await fetch("http://localhost:5000/user/deleteTimezone", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${user.jwt}`,
-      },
-      body: JSON.stringify({
-        ...timezone,
-        emailId: emailId,
-      }),
-    });
-    const responeData = await response.json();
-    if (response.status === 200) {
-      setUserData((userdata) => {
-        return {
-          ...userdata,
-          timeZone: responeData.timeZone,
-        };
+  const onDeleteTimezone = useCallback(async (timezone) => {
+    try {
+      const response = await apiClient({
+        url: `deleteTimezone`,
+        method: REQUEST_TYPE_POST,
+        authToken: user.jwt,
+        body: { ...timezone, emailId: emailId },
       });
-    } else {
-      toast.error(responeData.message);
+      setUserTimezoneData(response);
+      toast.success("Timzone Deleted");
+    } catch (e) {
+      toast.error(e.message);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (editTimezoneData) {
@@ -122,45 +117,74 @@ const Timezones = () => {
     setEditTimezoneData(timeZone);
   };
 
+  const onHandleSearch = (e) => {
+    const { value } = e.target;
+    const filteredData = userData.timeZone.filter((el) =>
+      el.timeZone.toLowerCase().includes(value.toLowerCase())
+    );
+    setSearchResult(filteredData);
+  };
+
   const resetData = () => {
     setEditTimezoneData(null);
     setModalShow(true);
-  }
+  };
 
   if (!!!userData) {
-    return <div className="spinner-container"><Spinner animation="border" variant="primary" /></div>;
+    return (
+      <div className="spinner-container">
+        <Spinner animation="border" variant="primary" />
+      </div>
+    );
+  }
+
+  const handleCloseModal = () => {
+    setModalShow(false);
+    setEditTimezoneData(null);
   }
 
   return (
     <div className="timezone-container">
-      <div className="header-container">
-        <Button
-          variant="primary"
-          className="btn-class"
-          onClick={() => resetData()}
-        >
-          Add Time Zone
-        </Button>
+      <div className="timezone-search-container">
+        <div className="search-time">
+          <Form.Group controlId="formBasicEmail">
+            <Form.Control
+              type="text"
+              placeholder="Search"
+              name="search"
+              onChange={onHandleSearch}
+            />
+          </Form.Group>
+        </div>
+        <div className="header-container">
+          <Button variant="primary" className="btn-class" name="addTimezone" onClick={resetData}>
+            Add Time Zone
+          </Button>
 
-        <TimeZoneModal
-          show={modalShow}
-          onSubmit={handleAddTimeZone}
-          handleClose={() => setModalShow(false)}
-          editTimezoneData={editTimezoneData}
-          onEditTimezone={handleEditTimezone}
-        />
+          <TimeZoneModal
+            show={modalShow}
+            onSubmit={handleAddTimeZone}
+            handleClose={handleCloseModal}
+            editTimezoneData={editTimezoneData}
+            onEditTimezone={handleEditTimezone}
+          />
+        </div>
       </div>
       <div className="timezone-grid-container">
-        {userData === null && <div className="spinner-container"><Spinner animation="border" variant="primary" /></div>}
-        {userData && userData?.timeZone?.length > 0 ? (
+        {userData === null && (
+          <div className="spinner-container">
+            <Spinner animation="border" variant="primary" />
+          </div>
+        )}
+        {searchResult && searchResult?.length > 0 ? (
           <TimeZoneGrid
-            timeZones={userData.timeZone}
+            timeZones={searchResult}
             onDeleteTimezone={onDeleteTimezone}
             onEditTimezone={onEditTimezone}
           />
         ) : (
           <div className="no-timezone">
-            <h2>{`${userData.firstName} ${userData.lastName}, no Timezone is added to the list`}</h2>
+            <h2>{`${userData.firstName} ${userData.lastName}, Timezone is not added. Please add timezone`}</h2>
           </div>
         )}
       </div>

@@ -1,16 +1,20 @@
 import { useState } from "react";
 import Button from "react-bootstrap/Button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Form from "react-bootstrap/Form";
-import { toast } from 'react-toastify';
-const SignUp = () => {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-  });
+import { toast } from "react-toastify";
+import { BASE_URL, REQUEST_TYPE_POST } from "../../constants/common";
+import { apiClient } from "../../network/apiClient";
 
+const INITIAL_STATE = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  password: "",
+};
+
+const SignUp = () => {
+  const [formData, setFormData] = useState(INITIAL_STATE);
   const navigate = useNavigate();
 
   const onHandleChange = (e) => {
@@ -29,25 +33,22 @@ const SignUp = () => {
       emailId: formData.email,
       password: formData.password,
     };
-    const response = await fetch("http://localhost:5000/user/signUp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    const responseJson = await response.json();
-    if(response.status === 200){
-      sessionStorage.setItem("userEmail", responseJson.data.emailId);
-      navigate('/timezone',{ state: { emailId: responseJson.user.emailId }});
-    }else{
-      toast.error(responseJson.message);
+    try {
+      await apiClient({
+        url: `signUp`,
+        method: REQUEST_TYPE_POST,
+        body: data,
+      });
+      navigate("/");
+    } catch (e) {
+      toast.error(e.message);
     }
   };
 
   return (
     <div className="outer">
       <div className="inner">
+      <h3>Create Account</h3>
         <Form onSubmit={submitForm}>
           <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Label>First Name</Form.Label>
@@ -57,6 +58,7 @@ const SignUp = () => {
               onChange={onHandleChange}
               name="firstName"
               value={formData.firstName}
+              required={true}
             />
           </Form.Group>
 
@@ -68,6 +70,7 @@ const SignUp = () => {
               onChange={onHandleChange}
               name="lastName"
               value={formData.lastName}
+              required={true}
             />
           </Form.Group>
 
@@ -79,6 +82,7 @@ const SignUp = () => {
               name="email"
               value={formData.email}
               onChange={onHandleChange}
+              required={true}
             />
           </Form.Group>
 
@@ -90,6 +94,7 @@ const SignUp = () => {
               name="password"
               value={formData.password}
               onChange={onHandleChange}
+              required={true}
             />
           </Form.Group>
 
@@ -100,7 +105,10 @@ const SignUp = () => {
           </div>
 
           <p className="forgot-password text-right">
-            Already registered <a href="#">log in?</a>
+            Already registered{" "}
+            <Link to="/">
+              log in?
+            </Link>
           </p>
         </Form>
       </div>

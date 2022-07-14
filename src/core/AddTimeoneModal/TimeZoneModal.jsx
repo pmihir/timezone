@@ -13,6 +13,7 @@ const TimeZoneModal = (props) => {
   const [name, setName] = useState(editTimezoneData?.name || "");
 
   let btnName = editTimezoneData ? "Edit" : "Add";
+
   const handleOnChange = (e) => {
     setSelectedTimezone(e.target.value);
   };
@@ -27,12 +28,12 @@ const TimeZoneModal = (props) => {
       setName(editTimezoneData.name);
       setSelectedTimezone(editTimezoneData.timeZone);
     } else {
-      setName('');
-      setSelectedTimezone('');
+      setName("");
+      setSelectedTimezone("");
     }
   }, [editTimezoneData]);
 
-  const onSubmitHandler = () => {
+  const onAddHandler = () => {
     const submitData = {
       name: name,
       timeZone: selectedTimezone,
@@ -46,9 +47,18 @@ const TimeZoneModal = (props) => {
     onEditTimezone({
       _id: editTimezoneData._id,
       name,
-      timeZone: selectedTimezone
-    })
-  }
+      timeZone: selectedTimezone,
+    });
+  };
+
+  const onSubmitHandler = (e) => {
+    e.preventDefault();
+    if (editTimezoneData) {
+      onEditHandler();
+    } else {
+      onAddHandler();
+    }
+  };
 
   return (
     <>
@@ -64,8 +74,8 @@ const TimeZoneModal = (props) => {
             {`${btnName} Timezone`}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          <Form>
+        <Form onSubmit={onSubmitHandler}>
+          <Modal.Body>
             <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
               <Form.Label>Name</Form.Label>
               <Form.Control
@@ -73,6 +83,7 @@ const TimeZoneModal = (props) => {
                 value={name}
                 onChange={changeNameHandler}
                 placeholder="Add Name"
+                required={true}
                 autoFocus
               />
             </Form.Group>
@@ -85,22 +96,23 @@ const TimeZoneModal = (props) => {
                 aria-label="Default select example"
                 onChange={handleOnChange}
                 value={selectedTimezone}
+                required={true}
               >
-                <option>Select Timezone</option>
+                <option value="">Select Timezone</option>
                 {timeZone.map((zone, index) => (
                   <option key={index}>{zone}</option>
                 ))}
               </Form.Select>
             </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          {editTimezoneData ? (
-            <Button onClick={onEditHandler}>EDIT</Button>
-          ) : (
-            <Button onClick={onSubmitHandler}>ADD</Button>
-          )}
-        </Modal.Footer>
+          </Modal.Body>
+          <Modal.Footer>
+            {editTimezoneData ? (
+              <Button type="submit">EDIT</Button>
+            ) : (
+              <Button type="submit">ADD</Button>
+            )}
+          </Modal.Footer>
+        </Form>
       </Modal>
     </>
   );
