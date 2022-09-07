@@ -11,6 +11,7 @@ export const apiClient = async ({ url, method, authToken, body }) => {
   });
   const responseJson = await response.json();
   if (response.status === 200) {
+    console.log("Code Changed");
     return responseJson;
   } else if (response.status === 401) {
     throw new Error(responseJson.message);
